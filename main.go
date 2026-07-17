@@ -1,0 +1,93 @@
+package main
+
+import (
+	"fmt"
+	"time"
+
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/app"
+	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/widget"
+)
+
+// overrideStockDate pins the analysis to a specific Baro arrival date
+// instead of whatever the live worldstate API currently reports. This is
+// what makes the "1–10.07.2026" reference window reproducible. Set this to
+// time.Time{} to always use Baro's live/current arrival date instead.
+var overrideStockDate = time.Date(2026, 7, 10, 0, 0, 0, 0, time.UTC)
+
+func main() {
+	a := app.NewWithID("github.com/Syzyf21/tenno-trader")
+	w := a.NewWindow("Tenno Trader")
+	w.Resize(fyne.NewSize(1300, 780))
+
+	status := widget.NewLabel("Select \"Baro Investor\" on the left to check investing opportunities, if new Baro stick is available, it will be automatically loaded.")
+	progress := widget.NewProgressBar()
+	progress.Hide()
+
+	resultsHolder := container.NewStack(widget.NewLabel(""))
+
+	header := widget.NewLabel("")
+	header.TextStyle = fyne.TextStyle{Bold: true}
+
+	content := container.NewBorder(
+		container.NewVBox(header, status, progress),
+		nil, nil, nil,
+		resultsHolder,
+	)
+
+	loadData := func() {
+		status.SetText("Working...")
+		progress.Show()
+		progress.SetValue(0)
+		header.SetText("")
+
+		go func() {
+			rows, window, err := buildRows(
+				overrideStockDate,
+				func(text string) {
+					fyne.Do(func() {
+						status.SetText(text)
+					})
+				},
+				func(done, total int, currentItem string) {
+					fyne.Do(func() {
+						if total > 0 {
+							progress.SetValue(float64(done) / float64(total))
+						}
+						if currentItem != "" {
+							status.SetText(fmt.Sprintf("Checking %d/%d: %s", done+1, total, currentItem))
+						}
+					})
+				},
+			)
+
+			fyne.Do(func() {
+				progress.Hide()
+				if err != nil {
+					status.SetText("Error: " + err.Error())
+					return
+				}
+
+				status.SetText(fmt.Sprintf("Loaded %d items.", len(rows)))
+				header.SetText(fmt.Sprintf(
+					"Baro Ki'Teer stock — averages computed for %s to %s",
+					window.Start.Format("02.01.2006"),
+					window.End.Format("02.01.2006"),
+				))
+
+				table := buildResultsTable(rows)
+				resultsHolder.Objects = []fyne.CanvasObject{table}
+				resultsHolder.Refresh()
+			})
+		}()
+	}
+
+	sidebar := buildSidebar(loadData)
+
+	split := container.NewHSplit(sidebar, content)
+	split.Offset = 0.2
+
+	w.SetContent(split)
+	w.ShowAndRun()
+}
