@@ -31,20 +31,17 @@ func ducatIconResource() fyne.Resource {
 	return fyne.NewStaticResource("ducat_icon.svg", []byte(ducatIconSVG))
 }
 
-// buildSidebar creates the left-hand navigation panel. For now it holds a
-// single item: the "Baroo Investor" entry, which triggers onSelect when
-// tapped.
 func buildSidebar(onSelect func()) fyne.CanvasObject {
-	navItem := widget.NewButtonWithIcon("Baro Investor", ducatIconResource(), onSelect)
-	navItem.Alignment = widget.ButtonAlignLeading
-	navItem.Importance = widget.LowImportance
+	baroInvestor := widget.NewButtonWithIcon("Baro Investor", ducatIconResource(), onSelect)
+	baroInvestor.Alignment = widget.ButtonAlignLeading
+	baroInvestor.Importance = widget.LowImportance
 
-	title := widget.NewLabelWithStyle("BARO INVESTOR", fyne.TextAlignLeading, fyne.TextStyle{Bold: true})
+	title := widget.NewLabelWithStyle("TENNO TRADER", fyne.TextAlignCenter, fyne.TextStyle{Bold: true})
 
 	box := container.NewVBox(
 		title,
 		widget.NewSeparator(),
-		navItem,
+		baroInvestor,
 		layout.NewSpacer(),
 	)
 	padded := container.NewPadded(box)
@@ -57,22 +54,16 @@ func buildResultsTable(rows []Row) *widget.Table {
 
 	table := widget.NewTable(
 		func() (int, int) {
-			return len(rows) + 1, len(headers)
+			return len(rows), len(headers)
 		},
 		func() fyne.CanvasObject {
 			return widget.NewLabel("")
 		},
 		func(id widget.TableCellID, obj fyne.CanvasObject) {
 			label := obj.(*widget.Label)
-
-			if id.Row == 0 {
-				label.TextStyle = fyne.TextStyle{Bold: true}
-				label.SetText(headers[id.Col])
-				return
-			}
 			label.TextStyle = fyne.TextStyle{}
 
-			r := rows[id.Row-1]
+			r := rows[id.Row]
 			switch id.Col {
 			case 0:
 				label.SetText(r.Name)
@@ -101,6 +92,20 @@ func buildResultsTable(rows []Row) *widget.Table {
 			}
 		},
 	)
+
+	table.ShowHeaderRow = true
+	table.CreateHeader = func() fyne.CanvasObject {
+		return widget.NewLabel("")
+	}
+	table.UpdateHeader = func(id widget.TableCellID, obj fyne.CanvasObject) {
+		label := obj.(*widget.Label)
+		if id.Row == -1 && id.Col >= 0 && id.Col < len(headers) {
+			label.TextStyle = fyne.TextStyle{Bold: true}
+			label.SetText(headers[id.Col])
+		} else {
+			label.SetText("")
+		}
+	}
 
 	table.SetColumnWidth(0, 260)
 	table.SetColumnWidth(1, 80)

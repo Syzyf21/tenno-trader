@@ -17,15 +17,9 @@ const (
 
 // itemsResponse mirrors GET /v2/items
 type itemsResponse struct {
-	Payload struct {
-		Items []MarketItem `json:"data"`
-	}
+	Items []MarketItem `json:"data"`
 }
 
-// statisticsResponse mirrors GET /v1/items/{url_name}/statistics
-// Note: this is the legacy v1 endpoint. It is marked deprecated by
-// warframe.market but remains functional and is the only endpoint that
-// currently exposes historical daily price/volume statistics.
 type statisticsResponse struct {
 	Payload struct {
 		StatisticsClosed struct {
@@ -68,23 +62,21 @@ func fetchMarketItemIndex() (map[string]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("Body %v", body)
 
 	var parsed itemsResponse
 	if err := json.Unmarshal(body, &parsed); err != nil {
-		return nil, fmt.Errorf("decode item list: %w", err)
+		return nil, fmt.Errorf("Error while parsing item list: %w", err)
 	}
+	fmt.Print(parsed)
 
-	index := make(map[string]string, len(parsed.Payload.Items))
-	for _, it := range parsed.Payload.Items {
+	index := make(map[string]string, len(parsed.Items))
+	for _, it := range parsed.Items {
 		index[normalizeItemName(it.I18n.En.Name)] = it.Slug
 	}
+	fmt.Print(index)
 	return index, nil
 }
 
-// normalizeItemName lowercases a name and strips everything but letters and
-// digits, so "Akbolto Prime Blueprint" and "akbolto_prime_blueprint" style
-// variants both hash to the same key.
 func normalizeItemName(s string) string {
 	var b strings.Builder
 	for _, r := range strings.ToLower(s) {
@@ -95,8 +87,6 @@ func normalizeItemName(s string) string {
 	return b.String()
 }
 
-// fetchItemStatistics retrieves historical daily statistics for a single
-// item, identified by its warframe.market url_name (e.g. "akbolto_prime_set").
 func fetchItemStatistics(urlName string) ([]StatEntry, error) {
 	body, err := marketGet("/v1/items/" + urlName + "/statistics")
 	if err != nil {
@@ -105,14 +95,11 @@ func fetchItemStatistics(urlName string) ([]StatEntry, error) {
 
 	var parsed statisticsResponse
 	if err := json.Unmarshal(body, &parsed); err != nil {
-		return nil, fmt.Errorf("decode statistics for %s: %w", urlName, err)
+		return nil, fmt.Errorf("Error while parsing statistics for %s: %w", urlName, err)
 	}
 	return parsed.Payload.StatisticsClosed.Days90, nil
 }
 
-// averageInWindow computes the average avg_price and average volume across
-// all daily entries whose date falls within [window.Start, window.End]
-// (inclusive, compared by calendar day in UTC).
 func averageInWindow(entries []StatEntry, window AnalysisWindow) (avgPrice, avgVolume float64, count int) {
 	var sumPrice, sumVolume float64
 	for _, e := range entries {
@@ -122,6 +109,9 @@ func averageInWindow(entries []StatEntry, window AnalysisWindow) (avgPrice, avgV
 		}
 		day := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.UTC)
 		if day.Before(window.Start) || day.After(window.End) {
+			continue
+		}
+		if e.ModRank != 0 {
 			continue
 		}
 		sumPrice += e.AvgPrice

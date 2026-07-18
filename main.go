@@ -20,8 +20,9 @@ func main() {
 	a := app.NewWithID("github.com/Syzyf21/tenno-trader")
 	w := a.NewWindow("Tenno Trader")
 	w.Resize(fyne.NewSize(1300, 780))
+	w.CenterOnScreen()
 
-	status := widget.NewLabel("Select \"Baro Investor\" on the left to check investing opportunities, if new Baro stick is available, it will be automatically loaded.")
+	status := widget.NewLabel("Select \"Baro Investor\" on the left to check investing opportunities, if new Baro stock is available, it will be automatically loaded.")
 	progress := widget.NewProgressBar()
 	progress.Hide()
 
