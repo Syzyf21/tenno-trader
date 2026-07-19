@@ -7,6 +7,7 @@ import (
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
+	"github.com/Syzyf21/tenno-trader/baroinvestor"
 )
 
 func main() {
@@ -37,7 +38,7 @@ func main() {
 		header.SetText("")
 
 		go func() {
-			rows, window, err := buildRows(
+			rows, window, err := baroinvestor.BuildRows(
 				func(text string) {
 					fyne.Do(func() {
 						status.SetText(text)
@@ -69,7 +70,7 @@ func main() {
 					window.End.Format("02.01.2006"),
 				))
 
-				table := buildResultsTable(rows)
+				table := baroinvestor.BuildResultsTable(rows)
 				resultsHolder.Objects = []fyne.CanvasObject{table}
 				resultsHolder.Refresh()
 			})

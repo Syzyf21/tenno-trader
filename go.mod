@@ -1,4 +1,4 @@
-module baroinvestor
+module github.com/Syzyf21/tenno-trader
 
 go 1.21
 
