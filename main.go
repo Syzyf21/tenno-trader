@@ -2,19 +2,12 @@ package main
 
 import (
 	"fmt"
-	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
 )
-
-// overrideStockDate pins the analysis to a specific Baro arrival date
-// instead of whatever the live worldstate API currently reports. This is
-// what makes the "1–10.07.2026" reference window reproducible. Set this to
-// time.Time{} to always use Baro's live/current arrival date instead.
-var overrideStockDate = time.Date(2026, 7, 10, 0, 0, 0, 0, time.UTC)
 
 func main() {
 	a := app.NewWithID("github.com/Syzyf21/tenno-trader")
@@ -45,7 +38,6 @@ func main() {
 
 		go func() {
 			rows, window, err := buildRows(
-				overrideStockDate,
 				func(text string) {
 					fyne.Do(func() {
 						status.SetText(text)

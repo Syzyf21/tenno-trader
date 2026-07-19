@@ -5,11 +5,8 @@ import (
 	"time"
 )
 
-// ProgressFunc is called after each item is processed so the UI can show
-// live progress (e.g. "12 / 46 items checked").
 type ProgressFunc func(done, total int, currentItem string)
 
-// StatusFunc reports coarse-grained status text to the UI.
 type StatusFunc func(text string)
 
 // buildRows fetches Baro's current inventory, matches each item against the
@@ -19,7 +16,7 @@ type StatusFunc func(text string)
 // overrideActivation, if non-zero, replaces the arrival date reported by the
 // worldstate API — useful for reproducing a specific historical stock such
 // as the one on 2026-07-10.
-func buildRows(overrideActivation time.Time, onStatus StatusFunc, onProgress ProgressFunc) ([]Row, AnalysisWindow, error) {
+func buildRows(onStatus StatusFunc, onProgress ProgressFunc) ([]Row, AnalysisWindow, error) {
 	notify := func(s string) {
 		if onStatus != nil {
 			onStatus(s)
@@ -29,28 +26,24 @@ func buildRows(overrideActivation time.Time, onStatus StatusFunc, onProgress Pro
 	notify("Fetching Baro Ki'Teer inventory...")
 	inv, err := fetchBaroInventory()
 	if err != nil {
-		return nil, AnalysisWindow{}, fmt.Errorf("baro inventory: %w", err)
+		return nil, AnalysisWindow{}, fmt.Errorf("Error while fetching Baro inventory: %w", err)
 	}
 
 	var refDate time.Time
-	if !overrideActivation.IsZero() {
-		refDate = overrideActivation
-	} else {
-		refDate, err = inv.activationDate()
-		if err != nil {
-			return nil, AnalysisWindow{}, fmt.Errorf("determine stock date: %w", err)
-		}
+	refDate, err = inv.activationDate()
+	if err != nil {
+		return nil, AnalysisWindow{}, fmt.Errorf("Error while determining baro activation date: %w", err)
 	}
 
-	window := AnalysisWindow{
-		Start: refDate.AddDate(0, 0, -9),
-		End:   refDate,
+	timeWindow := AnalysisWindow{
+		Start: refDate.AddDate(0, 0, -10),
+		End:   refDate.AddDate(0, 0, -1),
 	}
 
 	notify("Fetching warframe.market item catalogue...")
 	index, err := fetchMarketItemIndex()
 	if err != nil {
-		return nil, AnalysisWindow{}, fmt.Errorf("market item index: %w", err)
+		return nil, AnalysisWindow{}, fmt.Errorf("Error while fetching warframe.market item catalogue: %w", err)
 	}
 
 	total := len(inv.Inventory)
@@ -61,31 +54,25 @@ func buildRows(overrideActivation time.Time, onStatus StatusFunc, onProgress Pro
 			onProgress(i, total, baroItem.Item)
 		}
 
+		urlName, ok := index[normalizeItemName(baroItem.Item)]
+		if !ok {
+			continue
+		}
+
+		entries, err := fetchItemStatistics(urlName)
+		time.Sleep(marketRequestPause)
+
+		if err != nil {
+			continue
+		}
+
 		row := Row{
 			Name:    baroItem.Item,
 			Ducats:  baroItem.Ducats,
 			Credits: baroItem.Credits,
 		}
 
-		urlName, ok := index[normalizeItemName(baroItem.Item)]
-		if !ok {
-			row.NoMarketData = true
-			rows = append(rows, row)
-			continue
-		}
-
-		entries, err := fetchItemStatistics(urlName)
-		// Always pause to respect warframe.market's request rate guidance,
-		// regardless of success/failure of the call above.
-		time.Sleep(marketRequestPause)
-
-		if err != nil {
-			row.NoMarketData = true
-			rows = append(rows, row)
-			continue
-		}
-
-		avgPrice, avgVolume, count := averageInWindow(entries, window)
+		avgPrice, avgVolume, count := averageInWindow(entries, timeWindow)
 		row.AvgPlatinum = avgPrice
 		row.AvgVolume = avgVolume
 		row.DataPoints = count
@@ -103,5 +90,5 @@ func buildRows(overrideActivation time.Time, onStatus StatusFunc, onProgress Pro
 	}
 	notify("Done.")
 
-	return rows, window, nil
+	return rows, timeWindow, nil
 }
