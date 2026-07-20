@@ -51,7 +51,7 @@ func VitusIconResource() fyne.Resource {
 }
 
 func BuildResultsTable(rows []internal.ArbitrationRow) *widget.Table {
-	headers := []string{"Item", "Vitus Essence", "Avg Platinum (90d)", "Avg Volume (90d)", "Plat / Vitus"}
+	headers := []string{"Item", "Vitus Essence", "Avg Platinum (14d)", "Avg Volume (14d)", "Plat / Vitus"}
 
 	sortCol := -1
 	sortAsc := true

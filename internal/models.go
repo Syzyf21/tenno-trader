@@ -9,6 +9,13 @@ type BaroInventoryItem struct {
 	UniqueName string `json:"uniqueName"`
 }
 
+type BaroInventoryItemDB struct {
+	ID        string
+	Name      string
+	Ducats    int
+	Last_Seen string
+}
+
 type MarketItem struct {
 	ID   string `json:"id"`
 	Slug string `json:"slug"`

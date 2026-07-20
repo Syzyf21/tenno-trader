@@ -28,21 +28,19 @@ func DucatIconResource() fyne.Resource {
 }
 
 func BuildResultsTable(rows []internal.VoidTraderRow) *widget.Table {
-	headers := []string{"Item", "Ducats", "Avg Platinum (10d)", "Avg Volume (10d)", "Plat / Ducat", "Data pts"}
+	headers := []string{"Item", "Ducats", "Avg Platinum (14d)", "Avg Volume (14d)", "Plat / Ducat"}
 
-	// Sort tracking state
 	sortCol := -1
 	sortAsc := true
 
 	var table *widget.Table
 
-	// Helper to sort rows based on active column and direction
 	sortRows := func(col int) {
 		if sortCol == col {
-			sortAsc = !sortAsc // Toggle direction on repeated click
+			sortAsc = !sortAsc
 		} else {
 			sortCol = col
-			sortAsc = true // Default to ascending on new column
+			sortAsc = true
 		}
 
 		sort.Slice(rows, func(i, j int) bool {
@@ -60,8 +58,6 @@ func BuildResultsTable(rows []internal.VoidTraderRow) *widget.Table {
 				less = a.AvgVolume < b.AvgVolume
 			case 4:
 				less = a.PlatPerDucat < b.PlatPerDucat
-			case 5:
-				less = a.DataPoints < b.DataPoints
 			}
 
 			if sortAsc {
@@ -108,18 +104,15 @@ func BuildResultsTable(rows []internal.VoidTraderRow) *widget.Table {
 				} else {
 					label.SetText(fmt.Sprintf("%.3f", r.PlatPerDucat))
 				}
-			case 5:
-				label.SetText(fmt.Sprintf("%d", r.DataPoints))
 			}
 		},
 	)
 
 	table.ShowHeaderRow = true
 
-	// Header cells use buttons to capture click events
 	table.CreateHeader = func() fyne.CanvasObject {
 		btn := widget.NewButton("", nil)
-		btn.Importance = widget.LowImportance // Keeps header flat and clean
+		btn.Importance = widget.LowImportance
 		return btn
 	}
 
@@ -128,7 +121,6 @@ func BuildResultsTable(rows []internal.VoidTraderRow) *widget.Table {
 		if id.Row == -1 && id.Col >= 0 && id.Col < len(headers) {
 			title := headers[id.Col]
 
-			// Append directional indicator if this column is currently active
 			if id.Col == sortCol {
 				if sortAsc {
 					title += " ▲"
@@ -152,7 +144,6 @@ func BuildResultsTable(rows []internal.VoidTraderRow) *widget.Table {
 	table.SetColumnWidth(2, 160)
 	table.SetColumnWidth(3, 160)
 	table.SetColumnWidth(4, 120)
-	table.SetColumnWidth(5, 90)
 
 	return table
 }

@@ -63,7 +63,7 @@ func main() {
 							status.SetText(fmt.Sprintf("Checking %d/%d: %s", done+1, total, currentItem))
 						}
 					})
-				},
+				}, true,
 			)
 
 			fyne.Do(func() {
@@ -75,7 +75,53 @@ func main() {
 
 				status.SetText(fmt.Sprintf("Loaded %d items.", len(rows)))
 				header.SetText(fmt.Sprintf(
-					"Baro Ki'Teer stock — averages computed for %s to %s",
+					"Current Baro Ki'Teer stock — averages computed for %s to %s",
+					window.Start.Format("02.01.2006"),
+					window.End.Format("02.01.2006"),
+				))
+
+				table := baroinvestor.BuildResultsTable(rows)
+				resultsHolder.Objects = []fyne.CanvasObject{table}
+				resultsHolder.Refresh()
+			})
+		}()
+	}
+
+	loadLiveVoidTraderData := func() {
+		status.SetText("Working...")
+		progress.Show()
+		progress.SetValue(0)
+		header.SetText("")
+
+		go func() {
+			rows, window, err := baroinvestor.BuildRows(
+				func(text string) {
+					fyne.Do(func() {
+						status.SetText(text)
+					})
+				},
+				func(done, total int, currentItem string) {
+					fyne.Do(func() {
+						if total > 0 {
+							progress.SetValue(float64(done) / float64(total))
+						}
+						if currentItem != "" {
+							status.SetText(fmt.Sprintf("Checking %d/%d: %s", done+1, total, currentItem))
+						}
+					})
+				}, false,
+			)
+
+			fyne.Do(func() {
+				progress.Hide()
+				if err != nil {
+					status.SetText("Error: " + err.Error())
+					return
+				}
+
+				status.SetText(fmt.Sprintf("Loaded %d items.", len(rows)))
+				header.SetText(fmt.Sprintf(
+					"Current Baro Ki'Teer stock — averages computed for %s to %s",
 					window.Start.Format("02.01.2006"),
 					window.End.Format("02.01.2006"),
 				))
@@ -133,7 +179,7 @@ func main() {
 		}()
 	}
 
-	sidebar := buildSidebar(loadVoidTraderData, loadArbitrationsData)
+	sidebar := buildSidebar(loadVoidTraderData, loadLiveVoidTraderData, loadArbitrationsData)
 
 	split := container.NewHSplit(sidebar, content)
 	split.Offset = 0.2
