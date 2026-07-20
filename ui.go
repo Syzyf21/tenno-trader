@@ -9,12 +9,14 @@ import (
 	"github.com/Syzyf21/tenno-trader/baroinvestor"
 )
 
-func buildSidebar(onSelect func()) fyne.CanvasObject {
-	baroInvestor := widget.NewButtonWithIcon("Baro Investor", baroinvestor.DucatIconResource(), onSelect)
+func buildSidebar(onVoidTraderSelect func(), onArbitrationsSelect func()) fyne.CanvasObject {
+	baroInvestor := widget.NewButtonWithIcon("Baro Investor", baroinvestor.DucatIconResource(), onVoidTraderSelect)
 	baroInvestor.Alignment = widget.ButtonAlignLeading
 	baroInvestor.Importance = widget.LowImportance
 
-	arbitrations := widget.NewButtonWithIcon("Arbitrations", arbitrations.VitusIconResource(), onSelect)
+	arbitrations := widget.NewButtonWithIcon("Arbitrations", arbitrations.VitusIconResource(), onArbitrationsSelect)
+	arbitrations.Alignment = widget.ButtonAlignLeading
+	arbitrations.Importance = widget.LowImportance
 
 	title := widget.NewLabelWithStyle("TENNO TRADER", fyne.TextAlignCenter, fyne.TextStyle{Bold: true})
 

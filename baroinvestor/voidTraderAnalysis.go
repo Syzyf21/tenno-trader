@@ -11,7 +11,7 @@ type ProgressFunc func(done, total int, currentItem string)
 
 type StatusFunc func(text string)
 
-func BuildRows(onStatus StatusFunc, onProgress ProgressFunc) ([]internal.Row, internal.AnalysisWindow, error) {
+func BuildRows(onStatus StatusFunc, onProgress ProgressFunc) ([]internal.VoidTraderRow, internal.AnalysisWindow, error) {
 	notify := func(s string) {
 		if onStatus != nil {
 			onStatus(s)
@@ -42,7 +42,7 @@ func BuildRows(onStatus StatusFunc, onProgress ProgressFunc) ([]internal.Row, in
 	}
 
 	total := len(inv.Inventory)
-	rows := make([]internal.Row, 0, total)
+	rows := make([]internal.VoidTraderRow, 0, total)
 
 	for i, baroItem := range inv.Inventory {
 		if onProgress != nil {
@@ -61,7 +61,7 @@ func BuildRows(onStatus StatusFunc, onProgress ProgressFunc) ([]internal.Row, in
 			continue
 		}
 
-		row := internal.Row{
+		row := internal.VoidTraderRow{
 			Name:    baroItem.Item,
 			Ducats:  baroItem.Ducats,
 			Credits: baroItem.Credits,

@@ -26,7 +26,7 @@ func DucatIconResource() fyne.Resource {
 	return fyne.NewStaticResource("ducat_icon.svg", []byte(ducatIconSVG))
 }
 
-func BuildResultsTable(rows []internal.Row) *widget.Table {
+func BuildResultsTable(rows []internal.VoidTraderRow) *widget.Table {
 	headers := []string{"Item", "Ducats", "Avg Platinum (10d)", "Avg Volume (10d)", "Plat / Ducat", "Data pts"}
 
 	table := widget.NewTable(

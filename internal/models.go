@@ -30,8 +30,8 @@ type StatEntry struct {
 	ModRank  int     `json:"mod_rank"`
 }
 
-// Row is a fully computed line of the results table shown in the UI.
-type Row struct {
+// VoidTraderRow is a fully computed line of the results table shown in the UI.
+type VoidTraderRow struct {
 	Name         string
 	Ducats       int
 	Credits      int
@@ -40,6 +40,21 @@ type Row struct {
 	PlatPerDucat float64
 	DataPoints   int
 	NoMarketData bool
+}
+
+type ArbitrationRow struct {
+	Name         string
+	Vitus        int
+	AvgPlatinum  float64
+	AvgVolume    float64
+	PlatPerVitus float64
+	NoMarketData bool
+}
+
+type ArbitrationItem struct {
+	ID    string
+	Name  string
+	Vitus int
 }
 
 // AnalysisWindow is the date range (inclusive, whole days, UTC) over which

@@ -1,6 +1,12 @@
 package arbitrations
 
-import "fyne.io/fyne/v2"
+import (
+	"fmt"
+
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/widget"
+	"github.com/Syzyf21/tenno-trader/internal"
+)
 
 const vitusIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <defs>
@@ -41,4 +47,70 @@ const vitusIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64
 
 func VitusIconResource() fyne.Resource {
 	return fyne.NewStaticResource("vitus_icon.svg", []byte(vitusIconSVG))
+}
+
+func BuildResultsTable(rows []internal.ArbitrationRow) *widget.Table {
+	headers := []string{"Item", "Vitus Essence", "Avg Platinum (90d)", "Avg Volume (90d)", "Plat / Vitus"}
+
+	table := widget.NewTable(
+		func() (int, int) {
+			return len(rows), len(headers)
+		},
+		func() fyne.CanvasObject {
+			return widget.NewLabel("")
+		},
+		func(id widget.TableCellID, obj fyne.CanvasObject) {
+			label := obj.(*widget.Label)
+			label.TextStyle = fyne.TextStyle{}
+
+			r := rows[id.Row]
+			switch id.Col {
+			case 0:
+				label.SetText(r.Name)
+			case 1:
+				label.SetText(fmt.Sprintf("%d", r.Vitus))
+			case 2:
+				if r.NoMarketData {
+					label.SetText("no data")
+				} else {
+					label.SetText(fmt.Sprintf("%.1fp", r.AvgPlatinum))
+				}
+			case 3:
+				if r.NoMarketData {
+					label.SetText("-")
+				} else {
+					label.SetText(fmt.Sprintf("%.1f", r.AvgVolume))
+				}
+			case 4:
+				if r.NoMarketData || r.Vitus == 0 {
+					label.SetText("-")
+				} else {
+					label.SetText(fmt.Sprintf("%.3f", r.PlatPerVitus))
+				}
+			}
+		},
+	)
+
+	table.ShowHeaderRow = true
+	table.CreateHeader = func() fyne.CanvasObject {
+		return widget.NewLabel("")
+	}
+	table.UpdateHeader = func(id widget.TableCellID, obj fyne.CanvasObject) {
+		label := obj.(*widget.Label)
+		if id.Row == -1 && id.Col >= 0 && id.Col < len(headers) {
+			label.TextStyle = fyne.TextStyle{Bold: true}
+			label.SetText(headers[id.Col])
+		} else {
+			label.SetText("")
+		}
+	}
+
+	table.SetColumnWidth(0, 260)
+	table.SetColumnWidth(1, 80)
+	table.SetColumnWidth(2, 160)
+	table.SetColumnWidth(3, 160)
+	table.SetColumnWidth(4, 120)
+	table.SetColumnWidth(5, 90)
+
+	return table
 }
