@@ -121,7 +121,7 @@ func main() {
 
 				status.SetText(fmt.Sprintf("Loaded %d items.", len(rows)))
 				header.SetText(fmt.Sprintf(
-					"Baro Ki'Teer stock — averages computed for %s to %s",
+					"Arbitrations Shop Market data — averages computed for %s to %s",
 					window.Start.Format("02.01.2006"),
 					window.End.Format("02.01.2006"),
 				))

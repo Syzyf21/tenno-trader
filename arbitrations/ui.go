@@ -2,6 +2,7 @@ package arbitrations
 
 import (
 	"fmt"
+	"sort"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/widget"
@@ -52,7 +53,46 @@ func VitusIconResource() fyne.Resource {
 func BuildResultsTable(rows []internal.ArbitrationRow) *widget.Table {
 	headers := []string{"Item", "Vitus Essence", "Avg Platinum (90d)", "Avg Volume (90d)", "Plat / Vitus"}
 
-	table := widget.NewTable(
+	sortCol := -1
+	sortAsc := true
+
+	var table *widget.Table
+
+	sortRows := func(col int) {
+		if sortCol == col {
+			sortAsc = !sortAsc // Toggle direction on repeated click
+		} else {
+			sortCol = col
+			sortAsc = true // Default to ascending on new column
+		}
+
+		sort.Slice(rows, func(i, j int) bool {
+			a, b := rows[i], rows[j]
+			var less bool
+
+			switch col {
+			case 0:
+				less = a.Name < b.Name
+			case 1:
+				less = a.Vitus < b.Vitus
+			case 2:
+				less = a.AvgPlatinum < b.AvgPlatinum
+			case 3:
+				less = a.AvgVolume < b.AvgVolume
+			case 4:
+				less = a.PlatPerVitus < b.PlatPerVitus
+			}
+
+			if sortAsc {
+				return less
+			}
+			return !less
+		})
+
+		table.Refresh()
+	}
+
+	table = widget.NewTable(
 		func() (int, int) {
 			return len(rows), len(headers)
 		},
@@ -93,24 +133,38 @@ func BuildResultsTable(rows []internal.ArbitrationRow) *widget.Table {
 
 	table.ShowHeaderRow = true
 	table.CreateHeader = func() fyne.CanvasObject {
-		return widget.NewLabel("")
+		btn := widget.NewButton("", nil)
+		btn.Importance = widget.LowImportance
+		return btn
 	}
 	table.UpdateHeader = func(id widget.TableCellID, obj fyne.CanvasObject) {
-		label := obj.(*widget.Label)
+		btn := obj.(*widget.Button)
 		if id.Row == -1 && id.Col >= 0 && id.Col < len(headers) {
-			label.TextStyle = fyne.TextStyle{Bold: true}
-			label.SetText(headers[id.Col])
+			title := headers[id.Col]
+
+			if id.Col == sortCol {
+				if sortAsc {
+					title += " ▲"
+				} else {
+					title += " ▼"
+				}
+			}
+
+			btn.SetText(title)
+			btn.OnTapped = func() {
+				sortRows(id.Col)
+			}
 		} else {
-			label.SetText("")
+			btn.SetText("")
+			btn.OnTapped = nil
 		}
 	}
 
 	table.SetColumnWidth(0, 260)
-	table.SetColumnWidth(1, 80)
+	table.SetColumnWidth(1, 150)
 	table.SetColumnWidth(2, 160)
 	table.SetColumnWidth(3, 160)
 	table.SetColumnWidth(4, 120)
-	table.SetColumnWidth(5, 90)
 
 	return table
 }

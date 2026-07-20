@@ -10,12 +10,10 @@ import (
 )
 
 const (
-	marketBaseURL = "https://api.warframe.market"
-	// warframe.market asks integrators to stay at or under ~3 requests/sec.
+	marketBaseURL      = "https://api.warframe.market"
 	MarketRequestPause = 350 * time.Millisecond
 )
 
-// itemsResponse mirrors GET /v2/items
 type itemsResponse struct {
 	Items []MarketItem `json:"data"`
 }

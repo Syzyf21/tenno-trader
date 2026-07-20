@@ -25,7 +25,7 @@ func BuildRows(onStatus StatusFunc, onProgress ProgressFunc) ([]internal.Arbitra
 	}
 
 	timeWindow := internal.AnalysisWindow{
-		Start: time.Now().AddDate(0, 0, -10),
+		Start: time.Now().AddDate(0, 0, -14),
 		End:   time.Now(),
 	}
 
