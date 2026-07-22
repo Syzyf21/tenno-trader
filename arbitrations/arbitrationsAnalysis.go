@@ -79,7 +79,7 @@ func BuildRows(onStatus StatusFunc, onProgress ProgressFunc, isMax bool) ([]inte
 	notify("Fetching complete. Inserting data to database")
 
 	sql := `DELETE FROM arbitration_data`
-	_, err = internal.DBConn.Query(sql)
+	_, err = internal.DBConn.Exec(sql)
 	if err != nil {
 		return nil, timeWindow, fmt.Errorf("Error while clearing arbitration data database: %v", err)
 	}
