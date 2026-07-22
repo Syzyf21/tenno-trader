@@ -82,12 +82,11 @@ func BuildRows(onStatus StatusFunc, onProgress ProgressFunc, isLive bool) ([]int
 			}
 
 			row := internal.VoidTraderRow{
-				Name:    baroItem.Item,
-				Ducats:  baroItem.Ducats,
-				Credits: baroItem.Credits,
+				Name:   baroItem.Item,
+				Ducats: baroItem.Ducats,
 			}
 
-			avgPrice, avgVolume, count := internal.AverageInWindow(entries, timeWindow)
+			avgPrice, avgVolume, count := internal.AverageInWindow(entries, timeWindow, false)
 			row.AvgPlatinum = avgPrice
 			row.AvgVolume = avgVolume
 			row.DataPoints = count
@@ -132,7 +131,7 @@ func BuildRows(onStatus StatusFunc, onProgress ProgressFunc, isLive bool) ([]int
 				Ducats: baroItem.Ducats,
 			}
 
-			avgPrice, avgVolume, count := internal.AverageInWindow(entries, timeWindow)
+			avgPrice, avgVolume, count := internal.AverageInWindow(entries, timeWindow, false)
 			row.AvgPlatinum = avgPrice
 			row.AvgVolume = avgVolume
 			row.DataPoints = count

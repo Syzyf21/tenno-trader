@@ -2,6 +2,7 @@ package arbitrations
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/Syzyf21/tenno-trader/internal"
@@ -11,7 +12,7 @@ type ProgressFunc func(done, total int, currentItem string)
 
 type StatusFunc func(text string)
 
-func BuildRows(onStatus StatusFunc, onProgress ProgressFunc) ([]internal.ArbitrationRow, internal.AnalysisWindow, error) {
+func BuildRows(onStatus StatusFunc, onProgress ProgressFunc, isMax bool) ([]internal.ArbitrationRow, internal.AnalysisWindow, error) {
 	notify := func(s string) {
 		if onStatus != nil {
 			onStatus(s)
@@ -60,7 +61,7 @@ func BuildRows(onStatus StatusFunc, onProgress ProgressFunc) ([]internal.Arbitra
 			Vitus: arbitrationItem.Vitus,
 		}
 
-		avgPrice, avgVolume, count := internal.AverageInWindow(entries, timeWindow)
+		avgPrice, avgVolume, count := internal.AverageInWindow(entries, timeWindow, isMax)
 		row.AvgPlatinum = avgPrice
 		row.AvgVolume = avgVolume
 		if row.Vitus > 0 && count > 0 {
@@ -75,7 +76,29 @@ func BuildRows(onStatus StatusFunc, onProgress ProgressFunc) ([]internal.Arbitra
 	if onProgress != nil {
 		onProgress(total, total, "")
 	}
-	notify("Done.")
+	notify("Fetching complete. Inserting data to database")
+
+	sql := `DELETE FROM arbitration_data`
+	_, err = internal.DBConn.Query(sql)
+	if err != nil {
+		return nil, timeWindow, fmt.Errorf("Error while clearing arbitration data database: %v", err)
+	}
+
+	for _, row := range rows {
+		sql := `INSERT INTO arbitration_data (item_name, vitus_cost, avg_platinum, avg_volume, plat_vitus, has_market_data) 
+		VALUES (?, ?, ?, ?, ?, ?)`
+
+		stmt, err := internal.DBConn.Prepare(sql)
+		if err != nil {
+			log.Fatalf("Błąd przygotowania zapytania: %q", err)
+		}
+		defer stmt.Close()
+
+		_, err = stmt.Exec(row.Name, row.Vitus, row.AvgPlatinum, row.AvgVolume, row.PlatPerVitus, row.NoMarketData)
+		if err != nil {
+			log.Fatalf("Błąd podczas wstawiania danych: %q", err)
+		}
+	}
 
 	return rows, timeWindow, nil
 }

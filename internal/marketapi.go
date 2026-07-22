@@ -96,7 +96,7 @@ func FetchItemStatistics(urlName string) ([]StatEntry, error) {
 	return parsed.Payload.StatisticsClosed.Days90, nil
 }
 
-func AverageInWindow(entries []StatEntry, window AnalysisWindow) (avgPrice, avgVolume float64, count int) {
+func AverageInWindow(entries []StatEntry, window AnalysisWindow, isMax bool) (avgPrice, avgVolume float64, count int) {
 	var sumPrice, sumVolume float64
 	for _, e := range entries {
 		t, err := time.Parse(time.RFC3339, e.Datetime)
@@ -107,7 +107,10 @@ func AverageInWindow(entries []StatEntry, window AnalysisWindow) (avgPrice, avgV
 		if day.Before(window.Start) || day.After(window.End) {
 			continue
 		}
-		if e.ModRank != 0 {
+		if e.ModRank != 0 && !isMax {
+			continue
+		}
+		if e.ModRank == 0 && isMax {
 			continue
 		}
 		sumPrice += e.AvgPrice
